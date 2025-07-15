@@ -79,7 +79,7 @@ function CodeBlock({ className, children }) {
           customStyle={{
             background: "none",
             margin: 0,
-            fontSize: "1em",
+            fontSize: "1.25em", // or "1.5em" for even larger
             fontFamily:
               'Fira Mono, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
           }}
@@ -154,7 +154,7 @@ function MarkdownRenderer({ url }) {
                 </code>
               );
             }
-            return <CodeBlock className={className + "text-2xl"}>{children}</CodeBlock>;
+            return <CodeBlock className={className}>{children}</CodeBlock>;
           },
           table({ children }) {
             return (
