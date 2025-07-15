@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const socials = [
   // You can add your own socials here if needed
@@ -165,12 +166,12 @@ const Writeups = () => {
                     </time>
                     <div className="flex-1 order-1 sm:order-2">
                       <h1 className="title text-base sm:text-lg md:text-xl lg:text-2xl font-semibold leading-tight">
-                        <a
-                          href={w.url}
+                        <Link
+                          to={w.url}
                           className="hacker-underline hover:text-[--hacker-green] transition-colors duration-200 break-words"
                         >
                           {w.title}
-                        </a>
+                        </Link>
                       </h1>
                     </div>
                   </div>
