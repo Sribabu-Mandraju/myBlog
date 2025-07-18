@@ -1,61 +1,62 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import MarkdownRenderer from "../components/Test";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import MarkdownRenderer from "../components/MarkdownRenderer";
+import { writeups } from "../constants/writeups";
 
-const writeups = [
-  {
-    file: "statemindctf25.md",
-    tags: ["web3", "ctf", "2025"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/README.md"
-  },
-  {
-    file: "backdoorctf24.md",
-    tags: ["ctf", "2024"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/README.md"
-  },
-  {
-    file: "rustlings.md",
-    tags: ["rust", "learning"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/README.md"
-  },
-  {
-    file: "pessimist-tasks.md",
-    tags: ["tasks", "pessimistic"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/README.md"
-  },
-  {
-    file: "ethernaut.md",
-    tags: ["ctf", "ethernaut"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/writeups/ethernaut.md"
-  },
-  {
-    file: "glacierctf23.md",
-    tags: ["ctf", "2023"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/writeups/glacierctf23.md"
-  },
-  {
-    file: "metaredctf23.md",
-    tags: ["ctf", "2023"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/writeups/metaredctf23.md"
-  },
-  {
-    file: "README.md",
-    tags: ["readme", "overview"],
-    url: "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/README.md"
-  }
-];
+// Utility to create a slug from a string
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
 
 const WriteupDetail = () => {
-  const { slug } = useParams();
+  const { ctfSlug, challengeSlug } = useParams();
+  const navigate = useNavigate();
   const [isFolderOpen, setIsFolderOpen] = useState(true);
   const [error, setError] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const currentWriteup = writeups.find(w => w.file.replace(/\.md$/, "") === slug);
-  const mdUrl = currentWriteup?.url || "https://raw.githubusercontent.com/TheMj0ln1r/novel-cryptography-project/refs/heads/main/README.md";
+  // Find the CTF event
+  const ctf = writeups.find(
+    (w) => slugify(w.title) === ctfSlug || slugify(w.name) === ctfSlug
+  );
+  const challenges = ctf?.CTFS || [];
 
-  // Close mobile sidebar on route change
-  useEffect(() => { setMobileSidebarOpen(false); }, [slug]);
+  // Find the challenge
+  let challenge = null;
+  if (challenges.length > 0) {
+    if (challengeSlug) {
+      challenge = challenges.find(
+        (ch) => slugify(ch.file.replace(/\.md$/, "")) === challengeSlug
+      );
+    } else {
+      challenge = challenges[0];
+    }
+  }
+
+  // If no challengeSlug, redirect to first challenge for direct linking
+  useEffect(() => {
+    if (ctf && challenges.length > 0 && !challengeSlug) {
+      const firstSlug = slugify(challenges[0].file.replace(/\.md$/, ""));
+      navigate(`/writeups/${ctfSlug}/${firstSlug}`, { replace: true });
+    }
+    // eslint-disable-next-line
+  }, [ctfSlug, ctf, challengeSlug, challenges.length]);
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [ctfSlug, challengeSlug]);
+
+  if (!ctf) {
+    return <div className="text-red-400 p-4">CTF not found.</div>;
+  }
+  if (!challenge) {
+    return <div className="text-red-400 p-4">Writeup not found.</div>;
+  }
+
+  const mdUrl = challenge.url;
 
   return (
     <div className="min-h-screen bg-black text-neutral-100 font-mono">
@@ -72,14 +73,8 @@ const WriteupDetail = () => {
           text-underline-offset: 4px;
           text-decoration-color: #39FF14;
         }
-        .hacker-underline:hover {
-          color: #39FF14;
-        }
-        .hacker-code {
-          background: #111;
-          color: #39FF14;
-          border: 1px solid #39FF14;
-        }
+
+      
         @media (max-width: 768px) {
           .mobile-sidebar-backdrop {
             position: fixed;
@@ -118,8 +113,19 @@ const WriteupDetail = () => {
             aria-label="Open folder sidebar"
             onClick={() => setMobileSidebarOpen((v) => !v)}
           >
-            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              width="28"
+              height="28"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </button>
           <Link
@@ -131,25 +137,25 @@ const WriteupDetail = () => {
         </div>
         <nav className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm sm:text-base md:text-lg">
           <div className="flex flex-wrap items-center gap-2">
-            {[
-              "posts",
-              "writeups",
-              "projects",
-              "contact",
-              "tags",
-            ].map((route) => (
-              <React.Fragment key={route}>
-                <Link
-                  to={`/${route}`}
-                  className={`hacker-underline hover:text-[--hacker-green] transition-colors duration-200 whitespace-nowrap ${
-                    route === "writeups" ? "font-bold text-[--hacker-green]" : ""
-                  }`}
-                >
-                  /{route}
-                </Link>
-                {route !== "tags" && <span className="mx-2 text-neutral-500">•</span>}
-              </React.Fragment>
-            ))}
+            {["posts", "writeups", "projects", "contact", "tags"].map(
+              (route) => (
+                <React.Fragment key={route}>
+                  <Link
+                    to={`/${route}`}
+                    className={`hacker-underline hover:text-[--hacker-green] transition-colors duration-200 whitespace-nowrap ${
+                      route === "writeups"
+                        ? "font-bold text-[--hacker-green]"
+                        : ""
+                    }`}
+                  >
+                    /{route}
+                  </Link>
+                  {route !== "tags" && (
+                    <span className="mx-2 text-neutral-500">•</span>
+                  )}
+                </React.Fragment>
+              )
+            )}
           </div>
         </nav>
       </header>
@@ -157,26 +163,39 @@ const WriteupDetail = () => {
       {/* Mobile Sidebar (Drawer) */}
       {mobileSidebarOpen && (
         <>
-          <div className="mobile-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+          <div
+            className="mobile-sidebar-backdrop"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
           <nav className="mobile-sidebar">
-            <div className="font-bold text-[--hacker-green] mb-4 flex items-center gap-2 cursor-pointer" onClick={() => setIsFolderOpen(!isFolderOpen)}>
-              <span className="text-lg">{isFolderOpen ? "📂" : "📁"} Writeups</span>
+            <div
+              className="font-bold text-[--hacker-green] mb-4 flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsFolderOpen(!isFolderOpen)}
+            >
+              <span className="text-lg">
+                {isFolderOpen ? "📂" : "📁"} Writeups
+              </span>
             </div>
             <ul className="text-sm space-y-2">
-              {writeups.map(({ file }) => {
-                const fileSlug = file.replace(/\.md$/, "");
+              {challenges.map((ch) => {
+                const chSlug = slugify(ch.file.replace(/\.md$/, ""));
                 return (
-                  <li key={file}>
-                    <Link
-                      to={`/writeups/${fileSlug}`}
+                  <li key={ch.file}>
+                    <button
+                      onClick={() => {
+                        navigate(`/writeups/${ctfSlug}/${chSlug}`);
+                        setMobileSidebarOpen(false);
+                      }}
                       className={`block px-3 py-2 rounded-lg hacker-underline hover:bg-neutral-900 hover:text-[--hacker-green] transition-all duration-200 flex items-center gap-2 ${
-                        slug === fileSlug ? "bg-neutral-900/50 text-[--hacker-green] font-bold" : ""
+                        challengeSlug === chSlug ||
+                        (!challengeSlug && ch === challenges[0])
+                          ? "bg-neutral-900/50 text-[--hacker-green] font-bold"
+                          : ""
                       }`}
-                      onClick={() => setMobileSidebarOpen(false)}
                     >
                       <span className="text-sm">📄</span>
-                      {file}
-                    </Link>
+                      {ch.file}
+                    </button>
                   </li>
                 );
               })}
@@ -186,7 +205,7 @@ const WriteupDetail = () => {
       )}
 
       {/* Layout */}
-      <div className="relative flex flex-row gap-6 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto md:py-8">
+      <div className="relative flex flex-row gap-6 px-4 sm:px-6 md:px-8 w-full mx-auto md:py-8">
         {/* Left: Folder Structure */}
         <aside
           className="hidden md:flex flex-col w-64 min-w-[16rem] border-r border-neutral-800 pr-6"
@@ -208,19 +227,22 @@ const WriteupDetail = () => {
           </div>
           {isFolderOpen && (
             <ul className="text-sm space-y-2">
-              {writeups.map(({ file }) => {
-                const fileSlug = file.replace(/\.md$/, "");
+              {challenges.map((ch) => {
+                const chSlug = slugify(ch.file.replace(/\.md$/, ""));
                 return (
-                  <li key={file}>
-                    <Link
-                      to={`/writeups/${fileSlug}`}
-                      className={`block px-3 py-2 rounded-lg hacker-underline hover:bg-neutral-900 hover:text-[--hacker-green] transition-all duration-200 flex items-center gap-2 ${
-                        slug === fileSlug ? "bg-neutral-900/50 text-[--hacker-green] font-bold" : ""
+                  <li key={ch.file}>
+                    <button
+                      onClick={() => navigate(`/writeups/${ctfSlug}/${chSlug}`)}
+                      className={`w-full text-left px-3 py-2 rounded-lg hacker-underline hover:bg-neutral-900 hover:text-[--hacker-green] transition-all duration-200 flex items-center gap-2 ${
+                        challengeSlug === chSlug ||
+                        (!challengeSlug && ch === challenges[0])
+                          ? "bg-neutral-900/50 text-[--hacker-green] font-bold"
+                          : ""
                       }`}
                     >
                       <span className="text-sm">📄</span>
-                      {file}
-                    </Link>
+                      {ch.file}
+                    </button>
                   </li>
                 );
               })}
@@ -229,8 +251,8 @@ const WriteupDetail = () => {
         </aside>
 
         {/* Center: Markdown Content */}
-        <main className="flex-1 min-w-0 py-4 px-2 md:px-8">
-          <div className="bg-neutral-900/80 rounded-2xl shadow-2xl p-2 md:p-10 border border-neutral-800 max-w-4xl mx-auto">
+        <main className="flex-1 min-w-0 ">
+          <div className="bg-neutral-900/80 rounded-2xl shadow-2xl border border-neutral-800 max-w-7xl mx-auto">
             {error ? (
               <div className="text-red-400 p-4">Error: {error}</div>
             ) : (
@@ -254,7 +276,7 @@ const WriteupDetail = () => {
             <span className="text-lg">🏷️</span> #hashtags
           </div>
           <div className="flex flex-wrap gap-2">
-            {(currentWriteup?.tags || []).map((tag) => (
+            {(challenge.tags || []).map((tag) => (
               <span
                 key={tag}
                 className="bg-neutral-900 text-[--hacker-green] px-3 py-1 rounded-full text-xs font-mono hover:bg-neutral-800 transition-colors duration-200"

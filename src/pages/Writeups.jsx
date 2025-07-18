@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import { writeups } from "../constants/writeups";
 const socials = [
   // You can add your own socials here if needed
 ];
@@ -13,46 +13,16 @@ const navLinks = [
   { href: "/tags", label: "/tags" },
 ];
 
-const writeups = [
-  {
-    date: "2025-01-14",
-    title: "Statemind Web3 CTF 2025",
-    url: "/writeups/statemindctf25/",
-  },
-  {
-    date: "2024-12-23",
-    title: "Backdoor CTF 2024",
-    url: "/writeups/backdoorctf24/",
-  },
-  {
-    date: "2024-12-09",
-    title: "Rustlings",
-    url: "/writeups/rustlings/",
-  },
-  {
-    date: "2023-12-30",
-    title: "Pessimistic Tasks",
-    url: "/writeups/pessimist-tasks/",
-  },
-  {
-    date: "2023-12-09",
-    title: "Ethernaut CTF",
-    url: "/writeups/ethernaut/",
-  },
-  {
-    date: "2023-11-27",
-    title: "Glacier CTF 2023",
-    url: "/writeups/glacierctf23/",
-  },
-  {
-    date: "2023-10-26",
-    title: "MetaRed CTF 2023",
-    url: "/writeups/metaredctf23/",
-  },
-];
-
 const hackerGreen = "#39FF14";
 const PAGE_SIZE = 5;
+
+// Utility to create a slug from a string
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
 
 const Writeups = () => {
   const [page, setPage] = useState(1);
@@ -157,7 +127,7 @@ const Writeups = () => {
             <ul className="divide-y divide-neutral-800 border-t border-neutral-800">
               {paginated.map((w) => (
                 <li
-                  key={w.url}
+                  key={w.title}
                   className="list-item py-4 sm:py-6 px-2 sm:px-4 hover:bg-neutral-900/40 transition-colors duration-200"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 md:gap-6">
@@ -167,7 +137,7 @@ const Writeups = () => {
                     <div className="flex-1 order-1 sm:order-2">
                       <h1 className="title text-base sm:text-lg md:text-xl lg:text-2xl font-semibold leading-tight">
                         <Link
-                          to={w.url}
+                          to={`/writeups/${slugify(w.title)}`}
                           className="hacker-underline hover:text-[--hacker-green] transition-colors duration-200 break-words"
                         >
                           {w.title}
